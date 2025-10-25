@@ -21,5 +21,12 @@ build_script:
   - nmake
   - 7z a ../yori-%CONFIGURATION%-%VERSION%-%PLATFORM%.7z bin
 
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: Ff432aLyTjRB02PAo9YoH+iRttges/GD2mpfggEdsZ+oDFoeYYzu3Z52IzsH+E1y
+  on:
+    APPVEYOR_REPO_TAG: true
+
 artifacts:
   - path: yori-*.7z
