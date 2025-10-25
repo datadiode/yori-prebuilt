@@ -1,0 +1,8 @@
+[submodule "yori-stable"]
+	path = yori-stable
+	url = https://github.com/malxau/yori
+	branch = stable
+[submodule "yori-master"]
+	path = yori-master
+	url = https://github.com/malxau/yori
+	branch = master
