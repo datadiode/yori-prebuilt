@@ -9,17 +9,23 @@ configuration:
   - master
 
 clone_script:
-  - git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+  - git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git "%APPVEYOR_BUILD_FOLDER%"
   - git checkout -qf %APPVEYOR_REPO_COMMIT%
   - git submodule update --init yori-%CONFIGURATION%
 
 build_script:
-  - cd %APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%
+  - if %PLATFORM:X=x%==x86 call "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM:X=x%
+  - if %PLATFORM:X=x%==x64 call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM:X=x%
+  - if %PLATFORM:X=x%==x86 link.exe -lib fdi.lib RunTmChk.lib
+  - cd "%APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%"
   - git tag v2.5 ca6f216
-  - for /f %%v IN ('git describe --tags') do set VERSION=%%v
-  - call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%
+  - for /f %%v in ('git describe --tags') do set VERSION=%%v
   - nmake
-  - 7z a ../yori-%CONFIGURATION%-%VERSION%-%PLATFORM%.7z bin
+  - 7z a "%APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%-%VERSION%-%PLATFORM:X=x%.7z" bin cache.mk
+  - cd "%APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%\pkg"
+  - for /d %%d in (..\bin\*) do %%d\yori.exe /c bld.ys1 & copy %%d\ysetup.exe .
+  - ren out ysetup
+  - 7z a -m0=Copy "%APPVEYOR_BUILD_FOLDER%\ysetup-%CONFIGURATION%-%VERSION%-%PLATFORM:X=x%.zip" ysetup\*.ini ysetup\*.cab ysetup.exe
 
 deploy:
   provider: GitHub
@@ -30,3 +36,4 @@ deploy:
 
 artifacts:
   - path: yori-*.7z
+  - path: ysetup-*.zip
