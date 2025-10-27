@@ -17,13 +17,17 @@ build_script:
   - if %PLATFORM:X=x%==x86 call "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM:X=x%
   - if %PLATFORM:X=x%==x64 call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM:X=x%
   - if %PLATFORM:X=x%==x86 link.exe -lib fdi.lib RunTmChk.lib
+  - C:/msys64/usr/bin/wget -nv -O %WINDIR%\bsdtar.exe "https://github.com/aspect-build/bsdtar-prebuilt/releases/download/v3.8.1-fix.1/tar_windows_x86_64.exe"
+  - C:/msys64/usr/bin/wget -nv -O %TEMP%\yori-bin.zip "https://github.com/malxau/yori/files/15286801/yori-bin--2024-05-02-g106a280-msvc2015.zip"
+  - bsdtar -xf %TEMP%\yori-bin.zip --strip-components=2 -C %WINDIR% */amd64/oneyori.exe */amd64/ymake.exe */amd64/ypm.exe
   - cd "%APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%"
   - git tag v2.5 ca6f216
   - for /f %%v in ('git describe --tags') do set VERSION=%%v
-  - nmake
-  - 7z a "%APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%-%VERSION%-%PLATFORM:X=x%.7z" bin cache.mk
   - cd "%APPVEYOR_BUILD_FOLDER%\yori-%CONFIGURATION%\pkg"
-  - for /d %%d in (..\bin\*) do %%d\yori.exe /c bld.ys1 & copy %%d\ysetup.exe .
+  - oneyori.exe /c bld.ys1
+  - for /d %%d in (out\*) do copy %%d\ysetup.exe .
+  - for %%x in (out\yori-*.cab) do copy %%x "%APPVEYOR_BUILD_FOLDER%\%%~nx-%CONFIGURATION%-%VERSION%.cab"
+  - del out\yori-*-dbg-*.cab out\yori-one-*.cab out\yori-modular-*.cab
   - ren out ysetup
   - 7z a -m0=Copy "%APPVEYOR_BUILD_FOLDER%\ysetup-%CONFIGURATION%-%VERSION%-%PLATFORM:X=x%.zip" ysetup\*.ini ysetup\*.cab ysetup.exe
 
@@ -35,5 +39,5 @@ deploy:
     APPVEYOR_REPO_TAG: true
 
 artifacts:
-  - path: yori-*.7z
-  - path: ysetup-*.zip
+  - path: yori-*.cab
+  - path: ysetup-*.exe
